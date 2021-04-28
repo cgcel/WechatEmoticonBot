@@ -35,6 +35,7 @@ def query_photo(inline_query):
         inline_query_list = inline_query.query.split(' ')
         default_id = 1
         result_list = []
+
         if len(inline_query_list) == 1:
             try:
                 emoticon_repeat = int(inline_query_list[0])
@@ -50,12 +51,17 @@ def query_photo(inline_query):
                                                      photo_height=1, input_message_content=types.InputTextMessageContent('{}{}'.format(input_text, i['text'])))
                     result_list.append(r)
                     default_id += 1
-        elif len(inline_query_list) == 2:
-            input_text = inline_query_list[0]
-            emoticon_repeat = int(inline_query_list[1])
+        elif len(inline_query_list) >= 2:
             for i in EMOTICON_LIST:
+                format_list = []
+                for j in inline_query_list:
+                    if j.isdecimal():
+                        format_list.append(int(j) * i['text'])
+                    else:
+                        format_list.append(j)
+                result_text = ''.join(format_list)
                 r = types.InlineQueryResultPhoto(id=str(default_id), photo_url=i['url'], thumb_url=i['url'], photo_width=1, photo_height=1, input_message_content=types.InputTextMessageContent(
-                    '{}{}'.format(input_text, i['text']*emoticon_repeat)))
+                    result_text))
                 result_list.append(r)
                 default_id += 1
         bot.answer_inline_query(inline_query.id, result_list, cache_time=1)
