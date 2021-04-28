@@ -15,14 +15,16 @@ bot = telebot.TeleBot("your_bot_token")
 def help_command(message):
     msg = """*使用 Inline 模式发送微信小黄脸!*
 
-使用方法 -> 对话框中:
-`@wechat_emoticon_bot ` -> 默认发单个表情
-    不输入任何参数, 可直接选择表情发送
-`@wechat_emoticon_bot 文字` -> 发送文字 + 表情
-    输入不带空格文字, 然后选择表情, 则按照 "文字[表情]" 格式发送
-`@wechat_emoticon_bot 数字` -> 连发表情
-    输入不带空格数字, 然后选择表情, 则按照 "[表情]x次数" 格式发送
-`@wechat_emoticon_bot 文字 数字` -> 发送文字 + 若干表情
+使用方法:
+
+1. 不输入任何参数, 直接发送表情
+    `@wechat_emoticon_bot `
+
+2. 添加整数, 连发表情
+    `@wechat_emoticon_bot 2`
+
+3. 添加字符串+整数, 发送带表情文字
+    `@wechat_emoticon_bot 2 你好 1 朋友`
 
 _注意: 由于 Telegram Bot API 限制, 最多只提供 50 个选项, 故可选表情已经过作者筛选_
 """
