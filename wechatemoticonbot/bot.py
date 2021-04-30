@@ -2,11 +2,12 @@
 # -*- coding: utf-8 -*-
 # author: elvin
 
+import re
+
 import telebot
 from telebot import types
 
 from utils import EMOTICON_LIST
-
 
 bot = telebot.TeleBot("your_bot_token")
 
@@ -32,43 +33,48 @@ _注意: 由于 Telegram Bot API 限制, 最多只提供 50 个选项, 故可选
 
 
 @bot.inline_handler(lambda query: len(query.query) >= 0)
-def query_photo(inline_query):
-    try:
-        inline_query_list = inline_query.query.split(' ')
-        default_id = 1
-        result_list = []
+def query_emoticons(inline_query):
+    default_id = 1
+    result_list = []
 
-        if len(inline_query_list) == 1:
-            try:
-                emoticon_repeat = int(inline_query_list[0])
-                for i in EMOTICON_LIST:
-                    r = types.InlineQueryResultPhoto(id=str(default_id), photo_url=i['url'], thumb_url=i['url'], photo_width=1,
-                                                     photo_height=1, input_message_content=types.InputTextMessageContent('{}'.format(i['text']*emoticon_repeat)))
-                    result_list.append(r)
-                    default_id += 1
-            except:
-                input_text = inline_query_list[0]
-                for i in EMOTICON_LIST:
-                    r = types.InlineQueryResultPhoto(id=str(default_id), photo_url=i['url'], thumb_url=i['url'], photo_width=1,
-                                                     photo_height=1, input_message_content=types.InputTextMessageContent('{}{}'.format(input_text, i['text'])))
-                    result_list.append(r)
-                    default_id += 1
-        elif len(inline_query_list) >= 2:
+    if ' ' not in inline_query.query:  # 队列中只有一个参数
+        if inline_query.query.isdecimal():  # 判断是否为数字
+            emoticon_repeat = int(inline_query.query)
             for i in EMOTICON_LIST:
-                format_list = []
-                for j in inline_query_list:
-                    if j.isdecimal():
-                        format_list.append(int(j) * i['text'])
-                    else:
-                        format_list.append(j)
-                result_text = ''.join(format_list)
-                r = types.InlineQueryResultPhoto(id=str(default_id), photo_url=i['url'], thumb_url=i['url'], photo_width=1, photo_height=1, input_message_content=types.InputTextMessageContent(
-                    result_text))
+                r = types.InlineQueryResultPhoto(id=str(default_id), photo_url=i['url'], thumb_url=i['url'], photo_width=1,
+                                                 photo_height=1, input_message_content=types.InputTextMessageContent('{}'.format(i['text']*emoticon_repeat)))
                 result_list.append(r)
                 default_id += 1
-        bot.answer_inline_query(inline_query.id, result_list, cache_time=1)
-    except Exception as e:
-        print(e)
+        else:  # 不为数字则当作字符串处理, 表情默认加在最后
+            input_text = inline_query.query
+            for i in EMOTICON_LIST:
+                r = types.InlineQueryResultPhoto(id=str(default_id), photo_url=i['url'], thumb_url=i['url'], photo_width=1,
+                                                 photo_height=1, input_message_content=types.InputTextMessageContent('{}{}'.format(input_text, i['text'])))
+                result_list.append(r)
+                default_id += 1
+
+    else:  # 队列中含有空格
+        result_text = inline_query.query
+        if not bool(re.search(r'\d', result_text)):  # 队列中只有空格, 没有数字. 说明用户输入了含空格文本, 默认将表情加在最后
+            result_text = result_text + '{e}'
+        else:
+            # 队列开头为数字 + 空格, 表示此处需要转化为表情
+            while result_text[0].isdecimal() and result_text[1] == ' ':
+                result_text = int(result_text[0]) * '{e}' + result_text[2:]
+            # 队列结尾为空格 + 数字, 表示此处需要转化为表情
+            while result_text[-1].isdecimal() and result_text[-2] == ' ':
+                result_text = result_text[:-2] + int(result_text[-1]) * '{e}'
+            if bool(re.search(r' \d ', result_text)):  # 队列中含有空格 + 数字 + 空格, 表示此处需要转化为表情
+                while bool(re.search(r' \d ', result_text)):
+                    result_text = re.sub(r' \d ', int(
+                        re.search(r' \d ', result_text)[0])*'{e}', result_text, 1)
+        for i in EMOTICON_LIST:
+            r = types.InlineQueryResultPhoto(id=str(default_id), photo_url=i['url'], thumb_url=i['url'], photo_width=1,
+                                             photo_height=1, input_message_content=types.InputTextMessageContent(result_text.format(e=i['text'])))
+            result_list.append(r)
+            default_id += 1
+
+    bot.answer_inline_query(inline_query.id, result_list, cache_time=1)
 
 
 if __name__ == "__main__":
