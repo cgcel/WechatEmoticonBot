@@ -55,19 +55,19 @@ def query_emoticons(inline_query):
 
     else:  # 队列中含有空格
         result_text = inline_query.query
-        if not bool(re.search(r'\d', result_text)):  # 队列中只有空格, 没有数字. 说明用户输入了含空格文本, 默认将表情加在最后
-            result_text = result_text + '{e}'
-        else:
+        if bool(re.search(r'\d ', result_text)) or bool(re.search(r' \d ', result_text)) or bool(re.search(r' \d', result_text)):
             # 队列开头为数字 + 空格, 表示此处需要转化为表情
-            while result_text[0].isdecimal() and result_text[1] == ' ':
+            if result_text[0].isdecimal() and result_text[1] == ' ':
                 result_text = int(result_text[0]) * '{e}' + result_text[2:]
             # 队列结尾为空格 + 数字, 表示此处需要转化为表情
-            while result_text[-1].isdecimal() and result_text[-2] == ' ':
+            if result_text[-1].isdecimal() and result_text[-2] == ' ':
                 result_text = result_text[:-2] + int(result_text[-1]) * '{e}'
-            if bool(re.search(r' \d ', result_text)):  # 队列中含有空格 + 数字 + 空格, 表示此处需要转化为表情
-                while bool(re.search(r' \d ', result_text)):
-                    result_text = re.sub(r' \d ', int(
-                        re.search(r' \d ', result_text)[0])*'{e}', result_text, 1)
+            while bool(re.search(r' \d ', result_text)):  # 队列中含有空格 + 数字 + 空格, 表示此处需要转化为表情
+                result_text = re.sub(r' \d ', int(
+                    re.search(r' \d ', result_text)[0])*'{e}', result_text, 1)
+        else:  # 格式外文本, 默认将表情加在最后
+            result_text = result_text + '{e}'
+
         for i in EMOTICON_LIST:
             r = types.InlineQueryResultPhoto(id=str(default_id), photo_url=i['url'], thumb_url=i['url'], photo_width=1,
                                              photo_height=1, input_message_content=types.InputTextMessageContent(result_text.format(e=i['text'])))
