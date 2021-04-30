@@ -25,7 +25,7 @@ def help_command(message):
     `@wechat_emoticon_bot 2`
 
 3. 添加字符串+整数, 发送带表情文字
-    `@wechat_emoticon_bot 2 你好 1 朋友`
+    `@wechat_emoticon_bot 1 a b 1 c 1`
 
 _注意: 由于 Telegram Bot API 限制, 最多只提供 50 个选项, 故可选表情已经过作者筛选_
 """
